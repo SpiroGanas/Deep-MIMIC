@@ -5,11 +5,18 @@ import pandas as pd
 import os.path
 
 
-def load_MIMIC_to_pandas(CSV_Folder_Location = '/data/', CSV_List = None):
+def load_MIMIC_to_pandas(CSV_Folder_Location = '/data/', CSV_List = None, gunzip=False):
     MIMIC_df = {}
 
-
+    # Load the dictionary of dtypes from the function below
     dtypes = Mimic_dtypes()
+
+
+    # if the files are still .gz archive files, set gunzip=True
+    # if the files have already been decompressed to .csv format, gunzip should be false
+    fileNameExtension = '.csv.gz' if gunzip else '.csv'
+    compressionType = 'gzip' if gunzip else None
+
 
 
     # If the user doesn't tell us what tables to load, we load all the tables.
@@ -46,14 +53,16 @@ def load_MIMIC_to_pandas(CSV_Folder_Location = '/data/', CSV_List = None):
 
     for MyFile in CSV_List:
         try:
-            MIMIC_df[MyFile] = pd.read_csv( os.path.join(CSV_Folder_Location, (MyFile+'.csv')),
+            MIMIC_df[MyFile] = pd.read_csv( os.path.join(CSV_Folder_Location, (MyFile+fileNameExtension)),
                                             dtype = dtypes[MyFile],
                                             parse_dates=True,
                                             sep=',',
-                                            index_col='ROW_ID'
+                                            index_col='ROW_ID',
+                                            compression = compressionType
                                             ) 
         except:
             print('Unable to load the file: ', MyFile)
+
 
     return MIMIC_df
 
@@ -163,7 +172,6 @@ def Mimic_dtypes():
                                     'STOPPED':str,
                                     }
     dtypes['DIAGNOSES_ICD']={       'ROW_ID':int,
-                                    'ROW_ID':float,
                                     'SUBJECT_ID':float,
                                     'HADM_ID':float,
                                     'SEQ_NUM':float,
@@ -314,7 +322,7 @@ def Mimic_dtypes():
                                     'DILUTION_VALUE':float,
                                     'INTERPRETATION':str,
                                     }
-    dtypes['NOTEEVENTS',]={         'ROW_ID':int,
+    dtypes['NOTEEVENTS']={         'ROW_ID':int,
                                     'SUBJECT_ID':float,
                                     'HADM_ID':float,
                                     'CHARTDATE':str,
@@ -435,17 +443,24 @@ def Mimic_dtypes():
 if __name__ == '__main__':
     '''This is an example showing how you can load the MIMIC csv files
        into a dictionary of pandas dataframs'''
+   
+    
 
-
-    Location_of_the_CSV_Files = 'D:\\MIMIC-III Clinical Database\\__Already_Uploaded'
+    # Set this variable to the folder where the .gz files are located
+    # On a Windows machine, be sure to use \\ instead of just \ in the file path.
+    Location_of_the_CSV_Files = 'D:\\MIMIC'
 
     
+    
+    # Comment out any files you don't need for your analysis.
+    # I was able to load all the files to memory on a VM that had 64GB of RAM.
+    # Loading all the files from their compressed state took over 30 minutes.
     List_of_files_you_want_to_load = [
         ########## one # means it has been tested and works, ## means I haven't tested it yet
                     'ADMISSIONS', # 12 MB
                     'CALLOUT', # 6.1 MB
                     'CAREGIVERS', # 199 KB
-##                    'CHARTEVENTS', # 33 GB ------BIG!!!
+#                    'CHARTEVENTS', # 33 GB ------BIG!!!
                     'CPTEVENTS', # 56 MB
                     'DATETIMEEVENTS', # 502 MB
                     'DIAGNOSES_ICD', # 19 MB
@@ -456,11 +471,11 @@ if __name__ == '__main__':
                     'D_ITEMS', # 933 KB
                     'D_LABITEMS', # 43 KB
                     'ICUSTAYS', # 6.1 MB
-##                    'INPUTEVENTS_CV', # 2.3 GB ------BIG!!!
-                    'INPUTEVENTS_MV', # 931 MB
-##                    'LABEVENTS', # 1.8GB ------BIG!!!
+#                    'INPUTEVENTS_CV', # 2.3 GB ------BIG!!!
+#                    'INPUTEVENTS_MV', # 931 MB  ------BIG!!!
+#                    'LABEVENTS', # 1.8GB ------BIG!!!
                     'MICROBIOLOGYEVENTS', # 70 MB
-##                    'NOTEEVENTS', # 3.8 GB  ------BIG!!!
+#                    'NOTEEVENTS', # 3.8 GB  ------BIG!!!
                     'OUTPUTEVENTS', # 379 MB
                     'PATIENTS', # 2.6 MB
                     'PRESCRIPTIONS', # 735 MB
