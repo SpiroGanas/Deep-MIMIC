@@ -18,7 +18,7 @@ These are the steps I followed to set up TensorFlow on a virtual machine running
     lsblk 
     ```
 
-2.  Create a file system on the sike
+2.  Create a file system on the disk
     ````shell
     sudo mkfs -t ext4 /dev/xvdb
     ````
